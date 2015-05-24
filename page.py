@@ -19,8 +19,8 @@ class MainPage(BasePage):
 
     search_text_element = SearchTextElement()
 
-    def does_title_contain(self, pageTitle):
-        return pageTitle in self.driver.title
+    def does_title_contain(self, page_title):
+        return page_title in self.driver.title
 
     def click_go_button(self):
         element = self.driver.find_element(*MainPageLocators.GO_BUTTON)
