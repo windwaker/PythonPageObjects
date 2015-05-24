@@ -18,7 +18,8 @@ class PythonOrgSearch(unittest.TestCase):
     main_page = page.MainPage(self.driver)
     assert main_page.does_title_contain("Python"), "Title of page is not correct ..."
     main_page.search_text_element = "pycon" # calls __set__ descriptor
-    print main_page.search_text_element # calls __get__ descriptor
+    # calls __get__ descriptor
+    self.assertEqual(main_page.search_text_element, "pycon", "Wrong text in field.")
     main_page.click_go_button()
     search_results_page = page.SearchResultsPage(self.driver)
     assert search_results_page.are_results_found(), "No results found."
