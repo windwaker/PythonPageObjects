@@ -17,14 +17,15 @@ class PythonOrgSearch(unittest.TestCase):
   def test_search_in_python_org(self):
     main_page = page.MainPage(self.driver)
     assert main_page.does_title_contain("Python"), "Title of page is not correct ..."
-    main_page.search_text_element = "pycon"
+    main_page.search_text_element = "pycon" # calls __set__ descriptor
+    print main_page.search_text_element # calls __get__ descriptor
     main_page.click_go_button()
     search_results_page = page.SearchResultsPage(self.driver)
     assert search_results_page.are_results_found(), "No results found."
     search_results_page.click_go_home()
 
   def tearDown(self):
-    self.driver.save_screenshot('screenshot.png')
+    #self.driver.save_screenshot('screenshot.png')
     self.driver.close()
 
 if __name__ == "__main__":
