@@ -2,21 +2,17 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 class BasePageElement(object):
 
-    def __set__(self, obj, value):
+    def __set__(self, obj, val):
         driver = obj.driver
-        #WebDriverWait(driver, 100).until(
-        #    lambda driver: driver.find_element_by_name(self.locator))
-        #    driver.find_element_by_name(self.locator).send_keys(value)
-        print "Using descriptor to set page element text ..."
+        print ("Sending '{0}' value to [{1}]".format(val, self.locator))
         WebDriverWait(driver, 10).until(
             lambda driver: driver.find_element(*self.locator))
-        driver.find_element(*self.locator).send_keys(value)
+        driver.find_element(*self.locator).send_keys(val)
 
-    # update __get__ to use more generic find_element
-    def __get__(self, obj, owner):
+    def __get__(self, obj, typ=None):
         driver = obj.driver
-        print "getting ..."
+        print ("Getting a value from [{0}]".format(self.locator))
         WebDriverWait(driver, 10).until(
-            lambda driver: driver.find_element_by_name(self.locator))
-        element = driver.find_element_by_name(self.locator)
+            lambda driver: driver.find_element(*self.locator))
+        element = driver.find_element(*self.locator)
         return element.get_attribute("value")
