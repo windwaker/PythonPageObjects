@@ -1,15 +1,17 @@
 import unittest
 from selenium import webdriver
 import page
+import time
 
 # http://selenium-python.readthedocs.org/en/latest/page-objects.html
+
+# run from command line to get XML report
+# https://github.com/xmlrunner/unittest-xml-reporting
 
 class PythonOrgSearch(unittest.TestCase):
 
   def setUp(self):
-    # TODO: change back to default before commiting
-    self.driver = webdriver.Chrome('/Users/colmh/bin/chromedriver')
-    #self.driver = webdriver.Chrome()
+    self.driver = webdriver.Chrome()
     self.driver.get("http://www.python.org")
     # self.driver.set_window_size(1920,1080)
     self.driver.maximize_window()
@@ -26,8 +28,11 @@ class PythonOrgSearch(unittest.TestCase):
     search_results_page.click_go_home()
 
   def tearDown(self):
-    #self.driver.save_screenshot('screenshot.png')
-    self.driver.close()
+    self.driver.save_screenshot('screenshot.png')
+    # self.driver.close()
+    self.driver.quit()
 
 if __name__ == "__main__":
-  unittest.main()
+  #unittest.main()
+  import xmlrunner
+  unittest.main(testRunner=xmlrunner.XMLTestRunner(output='test-reports'))
