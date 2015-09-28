@@ -1,6 +1,3 @@
-__author__ = 'colmh'
-
-
 class Data(object):
 
     HOME_PAGE = "http://the-internet.dev/login"

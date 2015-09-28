@@ -5,12 +5,11 @@ from selenium.webdriver.support.wait import WebDriverWait
 from data import Data
 from locators import LoginPageLocators
 import page
-import sys
-import time
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.events import EventFiringWebDriver
+from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.events import AbstractEventListener
-from datetime import datetime
+from datetime import datetime, time
+import logging
+import utilities
 
 '''
 Python is becoming a more and more important component in the testing toolkit.
@@ -22,57 +21,97 @@ as well as topics like Page Objects.
 More advanced features of Python such as Decorators and Descriptors will also be introduced.
 '''
 
-# http://selenium-python.readthedocs.org/en/latest/page-objects.html
-# http://blog.likewise.org/2015/01/automatically-capture-browser-screenshots-after-failed-python-ghostdriver-tests/
 
-# run from command line to get XML report
-# https://github.com/xmlrunner/unittest-xml-reporting
-from utilities import Utility
-import utilities
+class TestDemos(unittest.TestCase):
 
-
-class PythonOrgSearch(unittest.TestCase):
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
+    handler = logging.FileHandler('selenium.log')
+    handler.setLevel(logging.INFO)
+    logger.addHandler(handler)
 
     def setUp(self):
-        print "Starting test ..."
+        self.logger.info('Starting test ...')
         self.driver = webdriver.Chrome()
         self.driver.maximize_window()
 
-    def test_login_internet(self):
-
+    def test_login_internet_original(self):
+        # arrange
+        self.logger.info('Instantiating driver ...')
+        self.logger.info('Wait time set to 5 seconds ...')
+        wait = WebDriverWait(self.driver, 5)
         # d = EventFiringWebDriver(self.driver, ScreenshotListener())
         self.driver.get("http://the-internet.dev/login")
-        username = self.driver.find_element_by_name("username")
+
+        # act
+        self.logger.info('Filling in username')
+        username = self.driver.find_element_by_id("username")
         username.clear()
         username.send_keys("tomsmith")
-        password = self.driver.find_element_by_name("password")
+
+        self.logger.info('Filling in password')
+        password = self.driver.find_element_by_id("password")
         password.clear()
         password.send_keys("SuperSecretPassword!")
+
+        self.logger.info('Clicking the submit button')
         login_button = self.driver.find_element_by_id("submit")
         login_button.click()
-        wait = WebDriverWait(self.driver, 5)
-        logout = wait.until(EC.element_to_be_clickable((By.ID, 'logout')))
+
+        # assert
+        self.logger.info('Waiting for logged in message on screen')
+        wait.until(ec.text_to_be_present_in_element((By.ID, 'flash-messages'), "You logged into a secure area!"))
+        logout = wait.until(ec.element_to_be_clickable((By.ID, 'logout')))
+        self.logger.info('Clicking logout button')
         logout.click()
-        wait.until(EC.element_to_be_clickable((By.ID, 'username')))
+        self.logger.info('Waiting for username textfield on screen')
+        wait.until(ec.element_to_be_clickable((By.ID, 'username')))
 
-    def test_login_internet2(self):
+    def test_login_internet_refactored(self):
 
+        # arrange
+        wait = WebDriverWait(self.driver, 5)
         self.driver.get(Data.HOME_PAGE)
-        username = self.driver.find_element(*LoginPageLocators.USER_NAME)
-        Utility.fill_in(username, Data.USER_NAME_STRING)
-        password = self.driver.find_element(*LoginPageLocators.PASSWORD)
-        Utility.fill_in(password, Data.PASSWORD_STRING)
+        util = utilities.Utility(self.driver)
+        login_page = page.LoginPage(self.driver)
+
+        # Decorator
+        username_locator = (By.CSS_SELECTOR, '#username')
+        util.fill_in(username_locator, Data.USER_NAME_STRING)
+
+        # Descriptor
+        login_page.login_element = Data.PASSWORD_STRING
+
+        # Vanilla
         login_button = self.driver.find_element(*LoginPageLocators.SUBMIT)
         login_button.click()
-        wait = WebDriverWait(self.driver, 5)
-        logout = wait.until(EC.element_to_be_clickable((By.ID, 'logout')))
-        logout.click()
-        wait.until(EC.element_to_be_clickable((By.ID, 'username')))
 
-        # all_cookies = self.driver.get_cookies()
-        #
-        # for cookie in all_cookies:
-        #     print cookie
+        # # assert
+        logout = wait.until(ec.element_to_be_clickable((By.ID, 'logout')))
+        logout.click()
+        wait.until(ec.element_to_be_clickable((By.ID, 'username')))
+
+    def test_login_upsource(self):
+        # arrange
+        self.logger.info('Instantiating driver ...')
+        self.logger.info('Wait time set to 5 seconds ...')
+        wait = WebDriverWait(self.driver, 5)
+        self.driver.get("http://colms-macbook-pro.local:8080")
+        wait.until(ec.element_to_be_clickable((By.CSS_SELECTOR, '.ring-btn_blue')))
+        self.driver.find_element_by_css_selector(".ring-btn_blue").click()
+
+        # act
+        username = self.driver.find_element_by_css_selector("#username")
+        username.clear()
+        username.send_keys("admin")
+        password = self.driver.find_element_by_css_selector("#password")
+        password.clear()
+        password.send_keys("rovers")
+        login_button = self.driver.find_element_by_css_selector(".login-button")
+        login_button.submit()
+
+        # assert
+        wait.until(ec.element_to_be_clickable((By.PARTIAL_LINK_TEXT, 'create a project')))
 
     def test_search_in_python_org(self):
         self.driver.get("http://www.python.org")
@@ -113,7 +152,6 @@ class ScreenshotListener(AbstractEventListener):
 
     def before_click(self, element, driver):
         print "I clicked %s" % element
-
 
 if __name__ == "__main__":
     # if len(sys.argv) != 2:
